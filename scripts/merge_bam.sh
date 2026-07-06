@@ -11,7 +11,6 @@ module load samtools/1.15.1
 BAM_LIST=${1:?"Error: Please provide BAM list as first argument"}
 OUT_DIR=${2:?"Error: Please provide output directory as second argument"}
 
-
 mkdir -p $OUT_DIR
 
 # Extract unique sample prefixes
@@ -20,17 +19,21 @@ samples=$(cat $BAM_LIST | xargs -n1 basename | sed 's/_S.*//' | sort -u)
 for sample in $samples; do
     echo "$(date): Merging ${sample}..."
     
-    L001=$(grep "${sample}_L001" $BAM_LIST)
-    L002=$(grep "${sample}_L002" $BAM_LIST)
+    # Find all BAMs for this sample from the list
+    bams=$(grep "/${sample}_S" $BAM_LIST)
     
-    if [[ -z "$L001" || -z "$L002" ]]; then
-        echo "WARNING: Could not find both lanes for ${sample}"
+    count=$(echo "$bams" | wc -l)
+    echo "  Found ${count} BAM files:"
+    echo "$bams" | sed 's/^/    /'
+    
+    if [[ -z "$bams" ]]; then
+        echo "  WARNING: No BAMs found for ${sample}, skipping"
         continue
     fi
     
     samtools merge -@ 4 -f \
         ${OUT_DIR}/${sample}_merged.bam \
-        $L001 $L002
+        $bams
     
     samtools index ${OUT_DIR}/${sample}_merged.bam
     
