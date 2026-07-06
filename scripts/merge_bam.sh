@@ -8,8 +8,9 @@
 
 module load samtools/1.15.1
 
-BAM_LIST="/home/eschaye1/Etta/H_contortus_selection/popoolation2_analyses/pileup/bam_list.txt"
-OUT_DIR="/home/eschaye1/Etta/H_contortus_selection/popoolation2_analyses/merge"
+BAM_LIST=${1:?"Error: Please provide BAM list as first argument"}
+OUT_DIR=${2:?"Error: Please provide output directory as second argument"}
+
 
 mkdir -p $OUT_DIR
 
