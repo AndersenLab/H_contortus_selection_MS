@@ -15,7 +15,7 @@ OUT_DIR=${2:?"Error: Please provide output directory as second argument"}
 mkdir -p $OUT_DIR
 
 # Extract unique sample prefixes
-samples=$(cat $BAM_LIST | xargs -n1 basename | sed 's/_L00[12]\.bam//' | sort -u)
+samples=$(cat $BAM_LIST | xargs -n1 basename | sed 's/_S.*//' | sort -u)
 
 for sample in $samples; do
     echo "$(date): Merging ${sample}..."
