@@ -8,15 +8,17 @@
 
 CONTIG_LIST=${1:?"Error: Please provide contig list as first argument"}
 REFERENCE=${2:?"Error: Please provide reference genome as second argument"}
+BAM_LIST=${3:?"Error: Please provide BAM list as third argument"}
 
 CHROM=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "$CONTIG_LIST")
 
 echo "Processing chromosome: $CHROM"
 echo "Reference: $REFERENCE"
+echo "BAM list: $BAM_LIST"
 
 
 samtools mpileup \
     -f "$REFERENCE" \
-    -b /home/eschaye1/Etta/H_contortus_selection/popoolation2_analyses/merge/pileup/merged_bam_list.txt \
+    -b "$BAM_LIST" \
     -r "$CHROM" \
     -o /home/eschaye1/Etta/H_contortus_selection/popoolation2_analyses/merge/pileup/pileup_${CHROM}.pileup
