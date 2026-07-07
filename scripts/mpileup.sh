@@ -10,6 +10,9 @@ CONTIG_LIST=${1:?"Error: Please provide contig list as first argument"}
 
 CHROM=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "$CONTIG_LIST")
 
+echo "Processing chromosome: $CHROM"
+
+
 samtools mpileup \
     -f /home/eschaye1/Etta/H_contortus_selection/h_contortus.PRJEB506.WBPS19.genome.fa.gz \
     -b /home/eschaye1/Etta/H_contortus_selection/popoolation2_analyses/merge/pileup/merged_bam_list.txt \
