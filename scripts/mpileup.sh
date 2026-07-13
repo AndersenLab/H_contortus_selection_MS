@@ -6,6 +6,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=mpileup_merge_%a.log
 
+module load samtools/1.10
+
 CONTIG_LIST=${1:?"Error: Please provide contig list as first argument"}
 REFERENCE=${2:?"Error: Please provide reference genome as second argument"}
 BAM_LIST=${3:?"Error: Please provide BAM list as third argument"}
