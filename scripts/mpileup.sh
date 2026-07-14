@@ -27,7 +27,8 @@ samtools mpileup \
     -f "$REFERENCE" \
     -b "$BAM_LIST" \
     -r "$CHROM" \
-    -o "${OUT_DIR}/pileup_${CHROM}.pileup"
+    -o "${OUT_DIR}/pileup_${CHROM}.pileup" \
+	--ignore-RG
 
 echo "$(date): Finished $CHROM"
 
