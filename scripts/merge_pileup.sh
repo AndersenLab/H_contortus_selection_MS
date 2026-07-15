@@ -5,8 +5,6 @@
 #SBATCH --time=12:00:00
 #SBATCH --output=merge_pileup.log
 
-source activate /home/eschaye1/data_eande106/software/conda_envs/popoolation2
-
 CONTIG_LIST=${1:?"Error: Please provide contig list as first argument"}
 PILEUP_DIR=${2:?"Error: Please provide pileup directory as second argument"}
 OUT_FILE=${3:-"${PILEUP_DIR}/final_merged.pileup"}
