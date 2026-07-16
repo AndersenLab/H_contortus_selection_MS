@@ -24,3 +24,7 @@ filter-sync-by-gtf.pl \
     --input "$INPUT_SYNC" \
     --gtf "$INPUT_GTF" \
     --output "$OUTPUT_SYNC"
+
+echo "$(date): Done"
+
+
