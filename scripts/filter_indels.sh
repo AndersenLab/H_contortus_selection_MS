@@ -3,7 +3,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=128G
 #SBATCH --time=24:00:00
-#SBATCH --output=filter_indels.log
+#SBATCH --output=filter_indels_%j.log
 
 set -euo pipefail
 
