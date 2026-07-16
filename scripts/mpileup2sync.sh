@@ -14,6 +14,8 @@ INPUT_PILEUP=${1:?"Error: Please provide input pileup file as first argument"}
 OUTPUT_SYNC=${2:?"Error: Please provide output sync path as second argument"}
 MIN_QUAL=${3:-20}
 
+mkdir -p "$(dirname "$OUTPUT_SYNC")"
+
 echo "Input pileup: $INPUT_PILEUP"
 echo "Output sync: $OUTPUT_SYNC"
 echo "Minimum quality: $MIN_QUAL"
