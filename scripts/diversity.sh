@@ -25,7 +25,10 @@ fi
 
 SAMPLE_NAMES=$(mktemp)
 trap "rm -f $SAMPLE_NAMES" EXIT
-tail -n +2 "$SAMPLE_LIST" | cut -f3 > "$SAMPLE_NAMES"
+SYNC_BASE=$(basename "$SYNC" .sync)
+awk -F'\t' -v base="$SYNC_BASE" 'NR>1 {print base "." NR-1 "\t" $3}' "$SAMPLE_LIST" > "$SAMPLE_NAMES"
+
+
  
 mkdir -p "$OUTDIR"
 
