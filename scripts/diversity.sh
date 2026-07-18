@@ -17,8 +17,11 @@ source activate /home/eschaye1/data_eande106/software/conda_envs/grenedalf
 FORMAT_FLAG=""
 if [[ "$FORMAT" == "popoolation" ]]; then
     FORMAT_FLAG="--popoolation-format"
+elif [[ "$FORMAT" != "grenedalf" ]]; then
+    echo "Error: format must be 'grenedalf' or 'popoolation', got '$FORMAT'" >&2
+    exit 1
 fi
-
+ 
 mkdir -p "$OUTDIR"
 
 echo "Sync file: $SYNC"
