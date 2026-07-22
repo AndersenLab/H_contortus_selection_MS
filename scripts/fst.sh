@@ -35,7 +35,7 @@ grenedalf fst \
     --window-type interval \
     --window-interval-width 10000 \
     --window-interval-stride 10000 \
-    --method unbiased-nei \
+    --method unbiased-hudson \
     --window-average-policy valid-snps \
     --pool-sizes 3000 \
     --threads 4 \
