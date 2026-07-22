@@ -36,7 +36,7 @@ grenedalf fst \
     --window-interval-width 10000 \
     --window-interval-stride 10000 \
     --method unbiased-hudson \
-    --window-average-policy valid-snps \
+    --window-average-policy available-loci \
     --pool-sizes 3000 \
     --threads 4 \
     --out-dir "$OUTDIR"
