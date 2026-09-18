@@ -10,6 +10,9 @@ set -euo pipefail
 SYNC=${1:?"Error: provide sync file"}
 OUTDIR=${2:?"Error: provide output directory"}
 SAMPLE_LIST=${3:?"Error: provide sample_list.txt"}
+WINDOW_WIDTH=${4:-100000}
+WINDOW_STRIDE=${5:-100000}
+REGION=${6:-}
 
 module load anaconda3
 source activate /home/eschaye1/data_eande106/software/conda_envs/grenedalf
@@ -25,7 +28,15 @@ mkdir -p "$OUTDIR"
 echo "Sync file: $SYNC"
 echo "Sample list: $SAMPLE_LIST"
 echo "Output directory: $OUTDIR"
+echo "Window width: $WINDOW_WIDTH"
+echo "Window stride: $WINDOW_STRIDE"
+echo "Region: ${REGION:-none (whole genome)}"
 echo ""
+
+REGION_ARGS=()
+if [[ -n "$REGION" ]]; then
+    REGION_ARGS=(--filter-region "$REGION")
+fi
 
 grenedalf diversity \
     --sync-path "$SYNC" \
@@ -33,9 +44,10 @@ grenedalf diversity \
     --filter-sample-min-count 2 \
     --filter-sample-min-read-depth 2 \
     --filter-sample-max-read-depth 500 \
+    "${REGION_ARGS[@]}" \
     --window-type interval \
-    --window-interval-width 100000 \
-    --window-interval-stride 100000 \
+    --window-interval-width "$WINDOW_WIDTH" \
+    --window-interval-stride "$WINDOW_STRIDE" \
     --window-average-policy valid-loci \
     --pool-sizes 3000 \
     --out-dir "$OUTDIR"
