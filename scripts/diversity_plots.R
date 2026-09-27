@@ -274,10 +274,11 @@ plot_diversity <- function(data,
 # --------------------------
 # Define plot_pi_ratio()
 # Input: data (output of calculate_pi_ratio()), one or more samples to plot
-# Output: Genome-wide Manhattan-style plot of log10(pi ratio) to baseline, faceted by sample, colored by chromosome
-
+# Output: Genome-wide plot of log10(pi ratio) to baseline, faceted by chromosome and sample
 plot_pi_ratio <- function(data,
                           samples,
+                          compact = FALSE,
+                          roman_numerals = TRUE,
                           chrom_order = c(
                             "hcontortus_chr1_Celeg_TT_arrow_pilon",
                             "hcontortus_chr2_Celeg_TT_arrow_pilon",
@@ -286,70 +287,86 @@ plot_pi_ratio <- function(data,
                             "hcontortus_chr5_Celeg_TT_arrow_pilon",
                             "hcontortus_chrX_Celeg_TT_arrow_pilon"
                           ),
-                          short_labels = c("I", "II", "III", "IV", "V", "X"),
                           save_path = NULL,
-                          width = 10,
-                          height = 3,
+                          width = 7.5,
+                          height_per_sample = 2,
                           dpi = 300) {
+  
+  # Set chromosome labels based on roman_numerals
+  if (roman_numerals) {
+    short_labels <- c("I", "II", "III", "IV", "V", "X")
+  } else {
+    short_labels <- c("1", "2", "3", "4", "5", "X")
+  }
   
   plot_data <- data %>%
     dplyr::filter(sample %in% samples, chrom %in% chrom_order, !is.na(pi_ratio_log10)) %>%
-    mutate(chrom = factor(chrom, levels = chrom_order))
-  
-  # Build cumulative genome-wide offset for each chromosome
-  chrom_lengths <- plot_data %>%
-    group_by(chrom) %>%
-    summarize(max_end = max(end), .groups = "drop") %>%
-    arrange(match(chrom, chrom_order)) %>%
-    mutate(offset = lag(cumsum(as.numeric(max_end)), default = 0))
-  
-  plot_data <- plot_data %>%
-    left_join(chrom_lengths %>% dplyr::select(chrom, offset), by = "chrom") %>%
     mutate(
-      position_mb = (((start + end) / 2) + offset) / 1e6,
-      chrom_short = factor(short_labels[match(chrom, chrom_order)], levels = short_labels)
+      chrom = factor(chrom, levels = chrom_order),
+      chrom_short = factor(short_labels[match(chrom, chrom_order)], levels = short_labels),
+      position_mb = ((start + end) / 2) / 1e6
     )
   
-  # Chromosome midpoints, for x-axis tick labels
-  axis_labels <- plot_data %>%
-    group_by(chrom_short) %>%
-    summarize(mid = mean(range(position_mb)), .groups = "drop")
+  # Relabel samples to human-readable names
+  if (compact) {
+    plot_data <- plot_data %>%
+      mutate(sample_label = gsub("Treatment0?(\\d+)_(Pre|Post)", "\\2-Txt \\1", sample),
+             sample_label = factor(sample_label, levels = unique(sample_label)))
+  } else {
+    plot_data <- plot_data %>%
+      mutate(sample_label = gsub("Treatment0?(\\d+)_(Pre|Post)", "\\2-treatment \\1", sample),
+             sample_label = factor(sample_label, levels = unique(sample_label)))
+  }
   
-  p <- ggplot(plot_data, aes(x = position_mb, y = pi_ratio_log10, color = chrom_short)) +
-    geom_point(alpha = 0.5, size = 0.6) +
+  # Standard theme
+  my_theme <- theme_bw(base_size = 12) +
+    theme(
+      axis.title.x = element_text(face = "bold", size = 12),
+      axis.title.y = element_text(face = "bold", size = 12, margin = margin(r = 0)),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10, margin = margin(r = 0)),
+      strip.text = element_text(size = 12),
+      strip.text.y.left = element_text(angle = 0, size = 12, margin = margin(l = 0, r = 0)),
+      panel.grid = element_blank(),
+      strip.background = element_blank(),
+      panel.spacing.x = unit(0.1, "lines")
+    )
+  
+  # Set x-axis breaks
+  if (compact) {
+    x_scale <- scale_x_continuous(breaks = function(x) setdiff(pretty(x), 0), expand = expansion(mult = c(0.02, 0.02)))
+  } else {
+    x_scale <- scale_x_continuous(breaks = c(15, 30, 45), expand = expansion(mult = c(0.02, 0.02)))
+  }
+  
+  p <- ggplot(plot_data, aes(x = position_mb, y = pi_ratio_log10)) +
+    geom_point(alpha = 0.3, size = 0.6, color = "black") +
     geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
-    scale_color_viridis_d() +
-    scale_x_continuous(breaks = axis_labels$mid, labels = axis_labels$chrom_short) +
-    labs(x = "Chromosome", y = expression(log[10]~(pi~ratio)), color = "Chromosome") +
-    guides(color = "none") +
-    theme_bw() +
-    theme(panel.grid.minor = element_blank())
+    x_scale +
+    labs(x = "Position (Mb)", y = "**log<sub>10</sub> (π ratio)**") +
+    my_theme +
+    theme(axis.title.y = ggtext::element_markdown(size = 12))
   
-  # Add facet - hide label for single sample, show for multiple
+  # Facet by chromosome (columns) and sample (rows)
   if (length(samples) == 1) {
     p <- p + 
-      facet_wrap(~sample, ncol = 1) +
-      theme(
-        strip.background = element_blank(),
-        strip.text = element_blank()
-      )
+      facet_wrap(~chrom_short, nrow = 1, scales = "free_x")
   } else {
     p <- p + 
-      facet_wrap(~sample, ncol = 1, strip.position = "left", labeller = as_labeller(relabel_sample)) +
+      facet_grid(sample_label ~ chrom_short, scales = "free_x", switch = "y") +
       theme(
-        strip.background = element_blank(),
         strip.placement = "outside",
-        strip.text.y.left = element_text(angle = 0)
+        strip.text.y.left = element_text(angle = 0, size = 12)
       )
   }
   
   if (!is.null(save_path)) {
-    ggsave(save_path, plot = p, width = width, height = height * length(samples), dpi = dpi)
+    total_height <- height_per_sample * length(samples)
+    ggsave(save_path, plot = p, width = width, height = total_height, dpi = dpi)
   }
   
   p
 }
-# --------------------------
 
 # --------------------------
 # Define plot_pi_ratio_by_value()
@@ -530,13 +547,48 @@ ggsave(paste0(out_dir, "pi_ratio_Treatment11_Pre.jpg"), plot = last_plot(), widt
 
 # --------------------------
 # Plot pi ratio for all samples
+
+# Full labels, roman numerals (default)
 plot_pi_ratio(
   pi_ratios,
   samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
               "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
               "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre")
 )
-ggsave(paste0(out_dir, "pi_ratio_all_samples.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+ggsave(paste0(out_dir, "pi_ratio_roman.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+
+
+# Compact labels, roman numerals
+plot_pi_ratio(
+  pi_ratios,
+  samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
+              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
+              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  compact = TRUE
+)
+ggsave(paste0(out_dir, "pi_ratio_compact_roman.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+
+# Full labels, arabic numerals
+plot_pi_ratio(
+  pi_ratios,
+  samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
+              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
+              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  roman_numerals = FALSE
+)
+ggsave(paste0(out_dir, "pi_ratio_arabic.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+
+
+# Compact labels, arabic numerals
+plot_pi_ratio(
+  pi_ratios,
+  samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
+              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
+              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  compact = TRUE,
+  roman_numerals = FALSE
+)
+ggsave(paste0(out_dir, "pi_ratio_compact_arabic.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
 # --------------------------
 
 # --------------------------
