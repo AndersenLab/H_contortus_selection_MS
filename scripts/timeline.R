@@ -2,14 +2,17 @@ library(tidyverse)
 library(lubridate)
 library(png)
 library(patchwork)
+library(here)
+
 
 # =============================================================================
 # GLOBAL FONT SIZE SETTING
 # =============================================================================
 font_size <- 12
 
-# Load clean data
-timeline <- read_csv("~/Etta/H_contortus_selection/timeline_clean.csv")
+# Load data
+timeline <- read_csv(here("timeline_clean.csv"))
+img <- readPNG(here("Goat_fields.png"))
 
 # =============================================================================
 # DATA PREPARATION
@@ -146,7 +149,7 @@ make_timeline_plot <- function(color_collections_by_dose = FALSE) {
 
 p_timeline_grey <- make_timeline_plot(color_collections_by_dose = FALSE)
 ggsave(
-  filename = "~/Etta/H_contortus_selection/figures/timeline_collections_grey.png",
+  filename = here("figures", "timeline_collections_grey.png"),
   plot = p_timeline_grey,
   width = 7.5,
   height = 3.3,
@@ -155,7 +158,7 @@ ggsave(
 
 p_timeline_colored <- make_timeline_plot(color_collections_by_dose = TRUE)
 ggsave(
-  filename = "~/Etta/H_contortus_selection/figures/timeline_collections_colored.png",
+  filename = here("figures", "timeline_collections_colored.png"),
   plot = p_timeline_colored,
   width = 7.5,
   height = 3.3,
@@ -165,8 +168,6 @@ ggsave(
 # =============================================================================
 # PADDOCK MAP PLOT
 # =============================================================================
-img <- readPNG("~/Etta/H_contortus_selection/Goat_fields.png")
-
 img_height <- dim(img)[1]
 img_width <- dim(img)[2]
 
@@ -199,7 +200,7 @@ combined_plot_vertical <- p_paddock / p_timeline_grey_tight +
   plot_layout(heights = c(1.4, 0.8))
 
 ggsave(
-  filename = "~/Etta/H_contortus_selection/figures/figure1_combined.png",
+  filename = here("figures", "figure1_combined.png"),
   plot = combined_plot_vertical,
   width = 7.5,
   height = 7,
