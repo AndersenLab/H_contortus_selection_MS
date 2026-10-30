@@ -5,25 +5,34 @@
 #SBATCH --time=12:00:00
 #SBATCH --output=merge_pileup.log
 
+set -euo pipefail
+
 CONTIG_LIST=${1:?"Error: Please provide contig list as first argument"}
 PILEUP_DIR=${2:?"Error: Please provide pileup directory as second argument"}
-OUT_FILE=${3:-"${PILEUP_DIR}/final_merged.pileup"}
-
-set -euo pipefail
+OUT_FILE=${3:-"${PILEUP_DIR}/merged.pileup"}
 
 # Build array of pileup files, one per contig, in the order listed
 PILEUP_FILES=()
-while IFS= read -r CHROM; do
+while IFS= read -r CHROM || [ -n "${CHROM}" ]; do
+    [ -z "${CHROM}" ] && continue
+
     f="${PILEUP_DIR}/pileup_${CHROM}.pileup"
-    if [ -f "$f" ]; then
-        PILEUP_FILES+=("$f")
-    else
-        echo "WARNING: missing $f" >&2
+    if [ ! -f "${f}" ]; then
+        echo "Error: missing ${f}" >&2
+        exit 1
     fi
-done < "$CONTIG_LIST"
+    PILEUP_FILES+=("${f}")
+done < "${CONTIG_LIST}"
 
-echo "Merging ${#PILEUP_FILES[@]} pileup files into $OUT_FILE"
+if [ ${#PILEUP_FILES[@]} -eq 0 ]; then
+    echo "Error: no contigs listed in ${CONTIG_LIST}" >&2
+    exit 1
+fi
 
-cat "${PILEUP_FILES[@]}" > "$OUT_FILE"
+mkdir -p "$(dirname "${OUT_FILE}")"
 
-echo "Done! Lines in ${OUT_FILE}: $(wc -l < "$OUT_FILE")"
+echo "Merging ${#PILEUP_FILES[@]} pileup files into ${OUT_FILE}"
+
+cat "${PILEUP_FILES[@]}" > "${OUT_FILE}"
+
+echo "Done! Lines in ${OUT_FILE}: $(wc -l < "${OUT_FILE}")"
