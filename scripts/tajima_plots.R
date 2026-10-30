@@ -86,7 +86,7 @@ relabel_sample <- function(x) {
 # --------------------------
 # Define plot_tajima()
 # Input: grenedalf dataframe with diversity metrics, which timepoints you want to plot
-# Output: Genome-wide plot of Tajima D, faceted by sample, colored by chromosome
+# Output: Genome-wide plot of Tajima D, faceted by sample, colored by chromosome or site count
 
 plot_tajima <- function(data,
                         samples,
@@ -99,6 +99,9 @@ plot_tajima <- function(data,
                           "hcontortus_chrX_Celeg_TT_arrow_pilon"
                         ),
                         short_labels = c("I", "II", "III", "IV", "V", "X"),
+                        color_by = c("chrom", "site_count"),
+                        site_col = "total.passed",
+                        color_label = "Sites/window",
                         show_label = FALSE,
                         smooth = FALSE,
                         loess_span = 0.1,
@@ -106,6 +109,8 @@ plot_tajima <- function(data,
                         width = 10,
                         height = 3,
                         dpi = 300) {
+  
+  color_by <- match.arg(color_by)
   
   plot_data <- data %>%
     dplyr::filter(sample %in% samples, chrom %in% chrom_order, !is.na(tajimas_d)) %>%
@@ -131,15 +136,34 @@ plot_tajima <- function(data,
     group_by(chrom_short) %>%
     summarize(mid = mean(range(position_mb)), .groups = "drop")
   
-  p <- ggplot(plot_data, aes(x = position_mb, y = tajimas_d, color = chrom_short)) +
+  # Base aes differs depending on coloring mode
+  if (color_by == "site_count") {
+    if (!site_col %in% names(plot_data)) {
+      stop(paste0("Column '", site_col, "' not found in data. Set site_col to the correct column name."))
+    }
+    p <- ggplot(plot_data, aes(x = position_mb, y = tajimas_d, color = .data[[site_col]]))
+  } else {
+    p <- ggplot(plot_data, aes(x = position_mb, y = tajimas_d, color = chrom_short))
+  }
+  
+  p <- p +
     geom_point(alpha = 0.5, size = 0.6) +
     geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
-    scale_color_viridis_d() +
     scale_x_continuous(breaks = axis_labels$mid, labels = axis_labels$chrom_short) +
-    labs(x = "Chromosome", y = "Tajima D", color = "Chromosome") +
-    guides(color = "none") +
     theme_bw() +
     theme(panel.grid.minor = element_blank())
+  
+  # Color scale + legend differ by mode
+  if (color_by == "site_count") {
+    p <- p +
+      scale_color_viridis_c(name = color_label) +
+      labs(x = "Chromosome", y = "Tajima D")
+  } else {
+    p <- p +
+      scale_color_viridis_d() +
+      labs(x = "Chromosome", y = "Tajima D", color = "Chromosome") +
+      guides(color = "none")
+  }
   
   # Add facet with or without labels
   if (show_label) {
@@ -274,4 +298,85 @@ plot_tajima_by_value(
   chrom_order = "hcontortus_chr1_Celeg_TT_arrow_pilon"
 )
 ggsave(paste0(out_dir, "tajima_by_value_chr1.jpg"), plot = last_plot(), width = 3.75, height = 8, dpi = 300)
+# --------------------------
+
+# --------------------------
+# --------------------------
+# 6. QC plots - colored by site counts
+# --------------------------
+# --------------------------
+
+# --------------------------
+# Join values with windows to get callable site counts
+diversity_values_with_callable <- diversity_values %>%
+  left_join(
+    diversity_data$windows %>% 
+      dplyr::select(chrom, start, end, total.passed, total.invariant) %>%
+      mutate(total_callable = total.passed + total.invariant),
+    by = c("chrom", "start", "end")
+  )
+# --------------------------
+
+# --------------------------
+# Plot Tajima D for all samples colored by callable sites
+plot_tajima(
+  diversity_values_with_callable,
+  samples = c("Treatment02_Pre", "Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
+              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
+              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  color_by = "site_count",
+  site_col = "total_callable",
+  color_label = "Callable sites",
+  show_label = TRUE
+)
+ggsave(paste0(out_dir, "tajima_all_samples_by_callable.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+# --------------------------
+
+# --------------------------
+# Plot Tajima D for all samples colored by SNPs only
+plot_tajima(
+  diversity_values_with_callable,
+  samples = c("Treatment02_Pre", "Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
+              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
+              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  color_by = "site_count",
+  site_col = "total.passed",
+  color_label = "SNPs/window",
+  show_label = TRUE
+)
+ggsave(paste0(out_dir, "tajima_all_samples_by_snps.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+# --------------------------
+
+# --------------------------
+# --------------------------
+# 7. Fine resolution plots
+# --------------------------
+# --------------------------
+
+# --------------------------
+# Load finer-resolution data
+diversity_data_fine <- load_diversity("/home/eschaye1/Etta/H_contortus_selection/diversity/chr1_2kb/diversity.csv")
+
+diversity_values_fine <- diversity_data_fine$values
+# --------------------------
+
+# --------------------------
+# Plot Tajima D for single sample (fine resolution)
+plot_tajima(
+  diversity_values_fine,
+  samples = "Treatment11_Pre"
+)
+ggsave(paste0(out_dir, "tajima_Treatment11_Pre_2kb.jpg"), plot = last_plot(), width = 3.75, height = 2.5, dpi = 300)
+# --------------------------
+
+# --------------------------
+# Plot Tajima D for all samples (fine resolution)
+plot_tajima(
+  diversity_values_fine,
+  samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
+              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
+              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  show_label = TRUE
+)
+ggsave(paste0(out_dir, "tajima_all_samples_2kb.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
 # --------------------------

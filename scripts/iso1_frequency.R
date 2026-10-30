@@ -161,7 +161,7 @@ make_f200y_scatter <- function(df, min_coverage = 3) {
     filter(Total >= min_coverage)
   
   p <- ggplot(df_filtered, aes(x = TreatmentNum, y = F200Y_frequency)) +
-    geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.8) +
+    geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.8, fullrange = TRUE) +
     geom_point(aes(shape = Phase, size = Total), color = "red", alpha = 0.8) +
     scale_shape_manual(
       values = c("Pre" = 16, "Post" = 17),
@@ -171,12 +171,14 @@ make_f200y_scatter <- function(df, min_coverage = 3) {
     scale_size_continuous(name = "Coverage", range = c(2, 6)) +
     scale_x_continuous(
       breaks = 1:11,
-      labels = as.character(1:11)
+      labels = as.character(1:11),
+      limits = c(0.5, 11.5),
+      expand = c(0, 0)
     ) +
     scale_y_continuous(
-      limits = c(0, 100),
       breaks = seq(0, 100, 25)
     ) +
+    coord_cartesian(ylim = c(0, 100)) +
     labs(
       x = "**Treatment**",
       y = "**F200Y variant frequency (%)**",
@@ -243,4 +245,3 @@ ggsave(
   height = 4,
   dpi = 300
 )
-

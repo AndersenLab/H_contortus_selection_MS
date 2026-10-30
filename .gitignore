@@ -4,3 +4,5 @@
 *.bai
 *.out
 *.err
+figures/fst_exploration/
+figures/misc_figures/

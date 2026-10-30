@@ -5,6 +5,8 @@
 #SBATCH --time=12:00:00
 #SBATCH --output=merge_bams_%j.log
 
+set -euo pipefail
+
 
 module load samtools/1.15.1
 

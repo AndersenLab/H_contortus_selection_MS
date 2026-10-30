@@ -5,12 +5,12 @@ library(cowplot)
 coverage <- read.delim("~/Etta/H_contortus_selection/coverage/coverage_with_names.tsv")
 
 # Make names human readable
-coverage$sample_name <- gsub("Treatment0?(\\d+)_(Pre|Post)", "\\2-treatment \\1", coverage$sample_name)
+coverage$sample_name <- gsub("Treatment0?(\\d+)_(Pre|Post)", "\\2-\\1", coverage$sample_name)
 
 # Make timepoints factors so they are ordered correctly 
 correct_order <- c(rbind(
-  paste0("Pre-treatment ", 1:11),
-  paste0("Post-treatment ", 1:11)
+  paste0("Pre-", 1:11),
+  paste0("Post-", 1:11)
 ))
 
 coverage$sample_name <- factor(coverage$sample_name, levels = rev(correct_order))
@@ -48,3 +48,4 @@ p_vertical <- ggplot(coverage, aes(x = sample_name, y = coverage)) +
         plot.margin = margin(5, 10, 5, 25))
 
 ggsave("~/Etta/H_contortus_selection/figures/coverage_vertical.png", p_vertical, width = 7.5, height = 3.75, dpi = 300)
+
