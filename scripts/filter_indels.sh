@@ -8,7 +8,7 @@
 set -euo pipefail
 
 module load anaconda/2020.07
-source activate /home/eschaye1/data_eande106/software/conda_envs/popoolation2
+source activate popoolation2
 
 INPUT_SYNC=${1:?"Error: Please provide input sync file as first argument"}
 INPUT_GTF=${2:?"Error: Please provide input GTF file as second argument"}
