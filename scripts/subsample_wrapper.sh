@@ -8,7 +8,7 @@ THRESHOLD=${3:?"Error: provide threshold"}
 OUTPUT_DIR=${4:?"Error: provide output directory"}
 
 # Find directory where wrapper script lives to infer location of other scripts
-SCRIPT_DIR="/home/eschaye1/Etta/H_contortus_selection_paper/scripts"
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # Count contigs for array job
 NUM_CONTIGS=$(ls "$SYNC_DIR"/*.sync | wc -l)
