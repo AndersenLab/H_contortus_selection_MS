@@ -8,13 +8,13 @@
 set -euo pipefail
 
 module load anaconda/2020.07
-source activate /home/eschaye1/data_eande106/software/conda_envs/popoolation2
+source activate popoolation2
 
 SYNC_DIR=${1:?"Error: provide sync directory"}
 THRESHOLD=${2:?"Error: provide threshold"}
 OUTPUT_DIR=${3:?"Error: provide output directory"}
 
-SCRIPT=/home/eschaye1/data_eande106/software/conda_envs/popoolation2/bin/subsample-synchronized.pl
+SCRIPT=$(command -v subsample-synchronized.pl)
 
 # Look at the sync directory to find contig files and build an array 
 CHROM_FILES=($(ls "$SYNC_DIR"/*.sync | sort))
