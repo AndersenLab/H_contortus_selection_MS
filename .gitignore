@@ -1,0 +1,6 @@
+*.gtf
+*.gtf.gz
+*.bam
+*.bai
+*.out
+*.err

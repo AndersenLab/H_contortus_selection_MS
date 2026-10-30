@@ -1,0 +1,11 @@
+column	ID	timepoint	original_coverage	new_coverage
+4	Ext_1492	Treatment02_Pre	14.230000	10
+5	Ext_1496	Treatment03_Pre	11.900000	10
+6	Ext_1504	Treatment04_Pre	44.230000	10
+7	78	Treatment08_Pre	33.120000	10
+8	81	Treatment08_Post	23.130000	10
+9	87	Treatment09_Pre	22.080000	10
+10	84	Treatment09_Post	92.520000	10
+11	92	Treatment10_Pre	14.750000	10
+12	95	Treatment10_Post	78.740000	10
+13	93	Treatment11_Pre	13.120000	10
