@@ -42,11 +42,6 @@ MIN_BASEQ=${MIN_BASEQ:-20}
 
 module load samtools/1.10
 
-if ! command -v bgzip &> /dev/null; then
-    echo "Error: bgzip not found"
-    exit 1
-fi
-
 CHROM=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "${CONTIG_LIST}")
 if [ -z "${CHROM}" ]; then
     echo "Error: no contig for task ${SLURM_ARRAY_TASK_ID} in ${CONTIG_LIST}"
@@ -54,7 +49,7 @@ if [ -z "${CHROM}" ]; then
 fi
 
 mkdir -p "${OUT_DIR}"
-OUT="${OUT_DIR}/pileup_${CHROM}.pileup.gz"
+OUT="${OUT_DIR}/pileup_${CHROM}.pileup"
 
 echo "$(date): Processing ${CHROM}"
 echo "Reference: ${REFERENCE}"
@@ -69,7 +64,7 @@ if ! samtools mpileup \
         -q "${MIN_MAPQ}" \
         -Q "${MIN_BASEQ}" \
         --ignore-RG \
-    | bgzip > "${OUT}"; then
+        -o "${OUT}"; then
     echo "Error: mpileup failed for ${CHROM}"
     rm -f "${OUT}"
     exit 1
