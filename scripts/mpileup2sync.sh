@@ -1,26 +1,24 @@
 #!/bin/bash
-#SBATCH --job-name=mpileup2sync_merge
+#SBATCH --job-name=mpileup2sync
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=16G
 #SBATCH --time=24:00:00
-#SBATCH --output=mpileup2sync_merge.log
+#SBATCH --output=mpileup2sync_%j.log
 
 set -euo pipefail
 
-module load anaconda/2020.07
-source activate /home/eschaye1/data_eande106/software/conda_envs/popoolation2
-
-INPUT_PILEUP=${1:?"Error: Please provide input pileup file as first argument"}
-OUTPUT_SYNC=${2:?"Error: Please provide output sync path as second argument"}
+INPUT_PILEUP=$1
+OUTPUT_SYNC=$2
 MIN_QUAL=${3:-20}
 
-mkdir -p "$(dirname "$OUTPUT_SYNC")"
+module load anaconda/2020.07
+source activate popoolation2
 
-echo "Input pileup: $INPUT_PILEUP"
-echo "Output sync: $OUTPUT_SYNC"
-echo "Minimum quality: $MIN_QUAL"
+JAR=$(find "${CONDA_PREFIX}" -name mpileup2sync.jar -print -quit)
 
-java -jar /home/eschaye1/data_eande106/software/conda_envs/popoolation2/share/popoolation2-1.201-0/mpileup2sync.jar \
-    --input "$INPUT_PILEUP" \
-    --output "$OUTPUT_SYNC" \
-    --min-qual "$MIN_QUAL" 
+mkdir -p "$(dirname "${OUTPUT_SYNC}")"
+
+java -jar "${JAR}" \
+    --input "${INPUT_PILEUP}" \
+    --output "${OUTPUT_SYNC}" \
+    --min-qual "${MIN_QUAL}"
