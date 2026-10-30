@@ -15,7 +15,7 @@ WINDOW_STRIDE=${5:-10000}
 REGION=${6:-}
 
 module load anaconda3
-source activate /home/eschaye1/data_eande106/software/conda_envs/grenedalf
+source activate grenedalf
 
 SAMPLE_NAMES=$(mktemp)
 trap "rm -f $SAMPLE_NAMES" EXIT
