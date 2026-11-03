@@ -1,9 +1,9 @@
 library(ggplot2)
 library(ggtext)
 library(cowplot)
+library(here)
 
-coverage <- read.delim("~/Etta/H_contortus_selection/coverage/coverage_with_names.tsv")
-
+coverage <- read.delim(here("coverage", "coverage_summary.tsv"))
 # Make names human readable
 coverage$sample_name <- gsub("Treatment0?(\\d+)_(Pre|Post)", "\\2-\\1", coverage$sample_name)
 
@@ -24,18 +24,7 @@ my_theme <- theme_bw(base_size = 12) +
         axis.text.y = element_text(size = 12),
         panel.grid = element_blank())
 
-# Horizontal version
-p_horizontal <- ggplot(coverage, aes(x = coverage, y = sample_name)) + 
-  geom_bar(stat = "identity") +
-  geom_vline(xintercept = 10, linetype = 3) +
-  scale_x_continuous(expand = expansion(mult = c(0, 0.05))) +
-  xlab("Mean coverage") +
-  ylab("Timepoint") +
-  my_theme
-
-ggsave("~/Etta/H_contortus_selection/figures/coverage_horizontal.png", p_horizontal, width = 7.5, height = 4.5, dpi = 300)
-
-# Flipped version
+# Generate plot
 p_vertical <- ggplot(coverage, aes(x = sample_name, y = coverage)) + 
   geom_bar(stat = "identity") +
   geom_hline(yintercept = 10, linetype = 3) +
@@ -47,5 +36,4 @@ p_vertical <- ggplot(coverage, aes(x = sample_name, y = coverage)) +
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1, vjust = 1),
         plot.margin = margin(5, 10, 5, 25))
 
-ggsave("~/Etta/H_contortus_selection/figures/coverage_vertical.png", p_vertical, width = 7.5, height = 3.75, dpi = 300)
-
+ggsave(here("figures", "coverage_vertical.png"), p_vertical, width = 7.5, height = 3.75, dpi = 300)
