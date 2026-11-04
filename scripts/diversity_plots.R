@@ -1,10 +1,11 @@
-#setwd(dir = "~/Etta/H_contortus_selection/scripts/")
-
 library(dplyr)
 library(readr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
+
+library(here)
+source(here("scripts", "functions.R"))
 
 # --------------------------
 # --------------------------
@@ -76,45 +77,6 @@ relabel_sample <- function(x) {
   paste0(timepoint, "_", number)
 }
 # --------------------------
-
-# --------------------------
-# Define normalize_and_calculate_pi_ratio()
-# Input: Diversity values from load_diversity(), timepoint to use as baseline
-# Output: Pi ratio (compared to baseline timepoint) for each subsequent timepoint, both raw and log10. Also the genome-wide rank for that timepoint.
-
-normalize_and_calculate_pi_ratio <- function(data, baseline = "F0") {
-  
-  # Step 1: Normalize pi to genome-wide median (per sample)
-  normalized_data <- data %>%
-    group_by(sample) %>%
-    mutate(pi_norm = theta_pi / median(theta_pi, na.rm = TRUE)) %>%
-    ungroup()
-  
-  # Step 2: Extract baseline
-  baseline_data <- normalized_data %>%
-    dplyr::filter(sample == baseline) %>%
-    dplyr::select(chrom, start, end, pi_norm_baseline = pi_norm)
-  
-  # Step 3: Extract non-baseline samples
-  other_data <- normalized_data %>%
-    dplyr::filter(sample != baseline) %>%
-    dplyr::select(chrom, start, end, sample, pi_norm_sample = pi_norm)
-  
-  # Step 4: Join and calculate ratios
-  ratio_data <- other_data %>%
-    inner_join(baseline_data, by = c("chrom", "start", "end")) %>%
-    mutate(
-      pi_ratio = pi_norm_sample / pi_norm_baseline,
-      pi_ratio_log10 = log10(pi_ratio)
-    ) %>%
-    group_by(sample) %>%
-    mutate(pi_rank = rank(pi_ratio, na.last = "keep")) %>%
-    ungroup() %>%
-    dplyr::select(chrom, start, end, sample, pi_norm_baseline, pi_norm_sample,
-                  pi_ratio, pi_ratio_log10, pi_rank)
-  
-  ratio_data
-}
 # --------------------------
 
 # --------------------------
@@ -484,7 +446,7 @@ plot_pi_outliers <- function(data,
 
 # --------------------------
 # Load data
-diversity_data <- load_diversity("~/Etta/H_contortus_selection/diversity/10X/diversity.csv")
+diversity_data <- load_diversity(here("diversity", "10X", "diversity.csv"))
 
 # View dataframes
 diversity_data$windows
@@ -501,6 +463,8 @@ unique(diversity_values$sample)
 # --------------------------
 # Calculate pi ratios
 pi_ratios <- normalize_and_calculate_pi_ratio(diversity_values, baseline = "Treatment02_Pre")
+dir.create(here("results"), showWarnings = FALSE)
+write_csv(pi_ratios, here("results", "pi_ratios_per_window.csv"))
 
 head(pi_ratios)
 
@@ -513,6 +477,7 @@ all_samples <- unique(pi_ratios$sample)
 pi_outliers <- identify_pi_outliers(pi_ratios, percentile = 0.001)
 
 candidate_regions <- find_contiguous_regions(pi_outliers, min_windows = 3)
+write_csv(candidate_regions, here("results", "candidate_regions.csv"))
 candidate_regions
 
 pi_flagged <- flag_region_windows(pi_outliers, candidate_regions)
@@ -525,88 +490,83 @@ pi_flagged <- flag_region_windows(pi_outliers, candidate_regions)
 # --------------------------
 
 # Define output directory
-out_dir <- "/vast/eande106/projects/Etta/H_contortus_selection/figures/"
+out_dir <- here("figures")
 
 # --------------------------
 # Plot raw diversity
-plot_diversity(
+p_div <- plot_diversity(
   diversity_values,
   samples = "Treatment11_Pre",
   metric = "theta_pi"
 )
-ggsave(paste0(out_dir, "diversity_Treatment11_Pre.jpg"), plot = last_plot(), width = 3.75, height = 2.5, dpi = 300)
+ggsave(file.path(out_dir, "diversity_Treatment11_Pre.jpg"), plot = p_div, width = 3.75, height = 2.5, dpi = 300)
 # --------------------------
 
 # --------------------------
 # Plot pi ratio for final sample
-plot_pi_ratio(
+p_pi_t11 <- plot_pi_ratio(
   pi_ratios,
   samples = "Treatment11_Pre"
 )
-ggsave(paste0(out_dir, "pi_ratio_Treatment11_Pre.jpg"), plot = last_plot(), width = 3.75, height = 2.5, dpi = 300)
+ggsave(file.path(out_dir, "pi_ratio_Treatment11_Pre.jpg"), plot = p_pi_t11, width = 3.75, height = 2.5, dpi = 300)
 # --------------------------
 
 # --------------------------
 # Plot pi ratio for all samples
+plot_samples <- c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
+                  "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
+                  "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre")
 
 # Full labels, roman numerals (default)
-plot_pi_ratio(
+p_roman <- plot_pi_ratio(
   pi_ratios,
-  samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
-              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
-              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre")
+  samples = plot_samples
 )
-ggsave(paste0(out_dir, "pi_ratio_roman.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+ggsave(file.path(out_dir, "pi_ratio_roman.jpg"), plot = p_roman, width = 7.5, height = 9, dpi = 300)
 
 
 # Compact labels, roman numerals
-plot_pi_ratio(
+p_compact_roman <- plot_pi_ratio(
   pi_ratios,
-  samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
-              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
-              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  samples = plot_samples,
   compact = TRUE
 )
-ggsave(paste0(out_dir, "pi_ratio_compact_roman.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+ggsave(file.path(out_dir, "pi_ratio_compact_roman.jpg"), plot = p_compact_roman, width = 7.5, height = 9, dpi = 300)
 
 # Full labels, arabic numerals
-plot_pi_ratio(
+p_arabic <- plot_pi_ratio(
   pi_ratios,
-  samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
-              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
-              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  samples = plot_samples,
   roman_numerals = FALSE
 )
-ggsave(paste0(out_dir, "pi_ratio_arabic.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+ggsave(file.path(out_dir, "pi_ratio_arabic.jpg"), plot = p_arabic, width = 7.5, height = 9, dpi = 300)
 
 
 # Compact labels, arabic numerals
-plot_pi_ratio(
+p_compact_arabic <- plot_pi_ratio(
   pi_ratios,
-  samples = c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
-              "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
-              "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre"),
+  samples = plot_samples,
   compact = TRUE,
   roman_numerals = FALSE
 )
-ggsave(paste0(out_dir, "pi_ratio_compact_arabic.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+ggsave(file.path(out_dir, "pi_ratio_compact_arabic.jpg"), plot = p_compact_arabic, width = 7.5, height = 9, dpi = 300)
 # --------------------------
 
 # --------------------------
 # Plot pi ratio colored by value (single chromosome)
-plot_pi_ratio_by_value(
+p_by_value <- plot_pi_ratio_by_value(
   pi_ratios,
   samples = all_samples,
   chrom_order = "hcontortus_chr1_Celeg_TT_arrow_pilon"
 )
-ggsave(paste0(out_dir, "pi_ratio_by_value_chr1.jpg"), plot = last_plot(), width = 3.75, height = 8, dpi = 300)
+ggsave(file.path(out_dir, "pi_ratio_by_value_chr1.jpg"), plot = p_by_value, width = 3.75, height = 8, dpi = 300)
 # --------------------------
 
 # --------------------------
 # Plot outliers
-plot_pi_outliers(
+p_outliers <- plot_pi_outliers(
   pi_flagged,
   samples = all_samples
 )
-ggsave(paste0(out_dir, "pi_outliers_all_samples.jpg"), plot = last_plot(), width = 7.5, height = 9, dpi = 300)
+ggsave(file.path(out_dir, "pi_outliers_all_samples.jpg"), plot = p_outliers, width = 7.5, height = 9, dpi = 300)
 
