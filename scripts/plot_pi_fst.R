@@ -2,11 +2,9 @@
 library(dplyr)
 library(readr)
 library(tidyr)
-library(stringr)
 library(ggplot2)
 library(ggtext)
 library(patchwork)
-library(viridisLite)
 library(here)
 source(here("scripts", "functions.R"))
 # --------------------------
