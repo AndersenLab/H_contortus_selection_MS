@@ -1,0 +1,9 @@
+chrom	length	bases	mean	min	max
+hcontortus_chr4_Celeg_TT_arrow_pilon	51826579	1616309220	31.19	0	34325
+hcontortus_chr5_Celeg_TT_arrow_pilon	48868368	1496213029	30.62	0	21015
+hcontortus_chr2_Celeg_TT_arrow_pilon	47382676	1617939073	34.15	0	32920
+hcontortus_chrX_Celeg_TT_arrow_pilon	46012677	1823076248	39.62	0	64836
+hcontortus_chr1_Celeg_TT_arrow_pilon	45774638	1341774235	29.31	0	26464
+hcontortus_chr3_Celeg_TT_arrow_pilon	43560352	1481738657	34.02	0	275971
+mitochondrion	14018	10080352	719.10	0	1270
+total	283439308	9387130814	33.12	0	275971

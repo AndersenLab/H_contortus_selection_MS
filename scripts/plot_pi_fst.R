@@ -83,19 +83,19 @@ load_fst <- function(path) {
 
 # --------------------------
 # --- Comparison 1: both at 10kb ---
-diversity_data_10kb <- load_diversity(here("diversity/genome_10kb/diversity.csv"))
+diversity_data_10kb <- load_diversity(here("data", "diversity", "10kb", "diversity.csv"))
 diversity_values_10kb <- diversity_data_10kb$values
 pi_ratios_10kb <- normalize_and_calculate_pi_ratio(diversity_values_10kb, baseline = "Treatment02_Pre")
 
-fst_data_10kb <- load_fst(here("fst/10X/fst.csv"))
+fst_data_10kb <- load_fst(here("data", "fst", "10kb", "fst.csv"))
 fst_values_10kb <- fst_data_10kb$values
 
 # --- Comparison 2: both at 100kb ---
-diversity_data_100kb <- load_diversity(here("diversity/10X/diversity.csv"))
+diversity_data_100kb <- load_diversity(here("data", "diversity", "100kb", "diversity.csv"))
 diversity_values_100kb <- diversity_data_100kb$values
 pi_ratios_100kb <- normalize_and_calculate_pi_ratio(diversity_values_100kb, baseline = "Treatment02_Pre")
 
-fst_data_100kb <- load_fst(here("fst/genome_100kb/fst.csv"))
+fst_data_100kb <- load_fst(here("data", "fst", "100kb", "fst.csv"))
 fst_values_100kb <- fst_data_100kb$values
 # --------------------------
 

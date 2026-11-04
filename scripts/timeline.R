@@ -11,8 +11,8 @@ library(here)
 font_size <- 12
 
 # Load data
-timeline <- read_csv(here("timeline_clean.csv"))
-img <- readPNG(here("Goat_fields.png"))
+timeline <- read_csv(here("data", "metadata", "timeline_clean.csv"))
+img <- readPNG(here("figures", "assets", "Goat_fields.png"))
 
 # =============================================================================
 # DATA PREPARATION

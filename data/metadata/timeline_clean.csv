@@ -1,0 +1,23 @@
+Date,Description,Treatment,Collection,Collection_Phase,Collection_Num,Dose_cat
+2022-09-09,Treatment,1,Pre_1,Pre,1,0.25
+2022-09-16,Fecal collection,NA,Post_1,Post,1,0.25
+2022-10-14,Treatment,2,Pre_2,Pre,2,0.25
+2022-10-21,Fecal collection,NA,Post_2,Post,2,0.25
+2022-11-04,Treatment,3,Pre_3,Pre,3,0.25
+2022-11-18,Fecal collection,NA,Post_3,Post,3,0.25
+2022-12-06,Treatment,4,Pre_4,Pre,4,0.25
+2022-12-13,Fecal collection,NA,Post_4,Post,4,0.25
+2023-03-03,Treatment,5,Pre_5,Pre,5,0.5
+2023-03-15,Fecal collection,NA,Post_5,Post,5,0.5
+2023-04-21,Treatment,6,Pre_6,Pre,6,0.5
+2023-05-01,Fecal collection,NA,Post_6,Post,6,0.5
+2023-06-16,Treatment,7,Pre_7,Pre,7,0.5
+2023-06-23,Fecal collection,NA,Post_7,Post,7,0.5
+2023-07-25,Treatment,8,Pre_8,Pre,8,0.5
+2023-08-01,Fecal collection,NA,Post_8,Post,8,0.5
+2023-09-14,Treatment,9,Pre_9,Pre,9,0.75
+2023-09-25,Fecal collection,NA,Post_9,Post,9,0.75
+2023-10-19,Treatment,10,Pre_10,Pre,10,0.75
+2023-10-26,Fecal collection,NA,Post_10,Post,10,0.75
+2023-11-02,Treatment,11,Pre_11,Pre,11,5
+2023-11-17,Fecal collection,NA,Post_11,Post,11,5

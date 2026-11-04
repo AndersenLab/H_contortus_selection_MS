@@ -446,7 +446,7 @@ plot_pi_outliers <- function(data,
 
 # --------------------------
 # Load data
-diversity_data <- load_diversity(here("diversity", "10X", "diversity.csv"))
+diversity_data <- load_diversity(here("data", "diversity", "100kb", "diversity.csv"))
 
 # View dataframes
 diversity_data$windows
