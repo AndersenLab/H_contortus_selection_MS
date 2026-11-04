@@ -10,38 +10,6 @@ source(here("scripts", "functions.R"))
 # --------------------------
 
 # --------------------------
-# Define load_diversity()
-# Input: Raw diversity output from grenedalf (diversity.csv)
-# Output: A list of three dataframes (windows, qc, values)
-
-load_diversity <- function(path) {
-  raw <- read_csv(path, show_col_types = FALSE)
-  
-  windows <- raw %>%
-    dplyr::select(chrom, start, end, starts_with("total."))
-  
-  long <- raw %>%
-    dplyr::select(chrom, start, end, matches("^[^.]+\\.(missing|numeric|passed|theta_pi|theta_watterson|tajimas_d)$")) %>%
-    pivot_longer(
-      cols = -c(chrom, start, end),
-      names_to = c("sample", "metric"),
-      names_pattern = "^(.+)\\.(missing|numeric|passed|theta_pi|theta_watterson|tajimas_d)$",
-      values_to = "value"
-    ) %>%
-    mutate(value = ifelse(is.nan(value), NA_real_, value))
-  
-  wide <- long %>%
-    pivot_wider(names_from = metric, values_from = value)
-  
-  qc <- wide %>%
-    dplyr::select(chrom, start, end, sample, missing, numeric, passed)
-  
-  values <- wide %>%
-    dplyr::select(chrom, start, end, sample, theta_pi, theta_watterson, tajimas_d)
-  
-  list(windows = windows, qc = qc, values = values)
-}
-# --------------------------
 
 # --------------------------
 # Define load_fst()
