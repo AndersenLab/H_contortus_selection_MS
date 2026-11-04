@@ -9,60 +9,6 @@ source(here("scripts", "functions.R"))
 
 # --------------------------
 # --------------------------
-# 1. Data loading functions 
-# --------------------------
-# --------------------------
-
-# --------------------------
-# Define load_diversity()
-# Input: Raw diversity output from grenedalf (diversity.csv)
-# Output: A list of three dataframes
-# 1. windows: The number of sites that were included or excluded by window
-# 2. qc: The number of sites that were included or excluded by window and by sample
-# 3. values: The numeric output (pi, theta, tajimas_d) by window and by sample
-
-load_diversity <- function(path) {
-  raw <- read_csv(path, show_col_types = FALSE) # Read raw data and suppress warning messages
-  
-  # Select columns for windows dataframe
-  windows <- raw %>%
-    dplyr::select(chrom, start, end, starts_with("total."))
-  
-  # Each sample is a column prefix (Example: Treatment09_Pre.theta_pi)
-  # Convert to long format where each sample gets its own row
-  long <- raw %>%
-    dplyr::select(chrom, start, end, matches("^[^.]+\\.(missing|numeric|passed|theta_pi|theta_watterson|tajimas_d)$")) %>%
-    pivot_longer(
-      cols = -c(chrom, start, end),
-      names_to = c("sample", "metric"),
-      names_pattern = "^(.+)\\.(missing|numeric|passed|theta_pi|theta_watterson|tajimas_d)$",
-      values_to = "value"
-    ) %>%
-    mutate(value = ifelse(is.nan(value), NA_real_, value)) # Convert NaN to NA
-  
-  # Pivot metrics back out into their own columns, one row per window per sample
-  wide <- long %>%
-    pivot_wider(names_from = metric, values_from = value)
-  
-  # Make qc dataframe
-  qc <- wide %>%
-    dplyr::select(chrom, start, end, sample, missing, numeric, passed)
-  
-  # Make diversity values dataframe
-  values <- wide %>%
-    dplyr::select(chrom, start, end, sample, theta_pi, theta_watterson, tajimas_d)
-  
-  # Store as a list
-  list(
-    windows = windows,
-    qc = qc,
-    values = values
-  )
-}
-# --------------------------
-
-# --------------------------
-# --------------------------
 # 2. Data processing functions 
 # --------------------------
 # --------------------------
