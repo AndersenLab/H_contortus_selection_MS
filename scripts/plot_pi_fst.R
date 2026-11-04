@@ -83,19 +83,19 @@ load_fst <- function(path) {
 
 # --------------------------
 # --- Comparison 1: both at 10kb ---
-diversity_data_10kb <- load_diversity("~/Etta/H_contortus_selection/diversity/genome_10kb/diversity.csv")
+diversity_data_10kb <- load_diversity(here("diversity/genome_10kb/diversity.csv"))
 diversity_values_10kb <- diversity_data_10kb$values
 pi_ratios_10kb <- normalize_and_calculate_pi_ratio(diversity_values_10kb, baseline = "Treatment02_Pre")
 
-fst_data_10kb <- load_fst("~/Etta/H_contortus_selection/fst/10X/fst.csv")
+fst_data_10kb <- load_fst(here("fst/10X/fst.csv"))
 fst_values_10kb <- fst_data_10kb$values
 
 # --- Comparison 2: both at 100kb ---
-diversity_data_100kb <- load_diversity("~/Etta/H_contortus_selection/diversity/10X/diversity.csv")
+diversity_data_100kb <- load_diversity(here("diversity/10X/diversity.csv"))
 diversity_values_100kb <- diversity_data_100kb$values
 pi_ratios_100kb <- normalize_and_calculate_pi_ratio(diversity_values_100kb, baseline = "Treatment02_Pre")
 
-fst_data_100kb <- load_fst("~/Etta/H_contortus_selection/fst/genome_100kb/fst.csv")
+fst_data_100kb <- load_fst(here("fst/genome_100kb/fst.csv"))
 fst_values_100kb <- fst_data_100kb$values
 # --------------------------
 
@@ -242,7 +242,7 @@ plot_pi_tajima_fst_combined <- function(pi_ratio_values,
 # --------------------------
 
 # --------------------------
-out_dir <- "~/Etta/H_contortus_selection/figures/"
+out_dir <- here("figures")
 # --------------------------
 
 # --------------------------
@@ -257,7 +257,7 @@ p_10kb <- plot_pi_tajima_fst_combined(
 ) + plot_annotation(tag_levels = 'A')
 
 p_10kb
-ggsave(paste0(out_dir, "pi_fst_chr1_10kb.jpg"), plot = p_10kb, width = 7.5, height = 6, dpi = 300)
+ggsave(file.path(out_dir, "pi_fst_chr1_10kb.jpg"), plot = p_10kb, width = 7.5, height = 6, dpi = 300)
 # --------------------------
 
 # --------------------------
@@ -357,7 +357,7 @@ plot_fst_genome(
   fst_pair = "Treatment02_Pre:Treatment11_Pre",
   gene_region = tbb_iso1_region,
   gene_chrom = target_chrom,
-  save_path = paste0(out_dir, "fst_genome_100kb.png")
+  save_path = file.path(out_dir, "fst_genome_100kb.png")
 )
 # --------------------------
 
@@ -499,7 +499,7 @@ plot_fst_genome_multipair <- function(fst_values,
 plot_fst_genome_multipair(
   fst_values_100kb,
   fst_pairs = fst_pairs_to_plot,
-  save_path = paste0(out_dir, "fst_genome_multipair_arabic.jpg")
+  save_path = file.path(out_dir, "fst_genome_multipair_arabic.jpg")
 )
 
 # Without smoothing - Roman numerals
@@ -507,7 +507,7 @@ plot_fst_genome_multipair(
   fst_values_100kb,
   fst_pairs = fst_pairs_to_plot,
   roman_numerals = TRUE,
-  save_path = paste0(out_dir, "fst_genome_multipair.jpg")
+  save_path = file.path(out_dir, "fst_genome_multipair.jpg")
 )
 
 # With loess smoothing
@@ -516,7 +516,7 @@ plot_fst_genome_multipair(
   fst_pairs = fst_pairs_to_plot,
   smooth = TRUE,
   loess_span = 0.1,
-  save_path = paste0(out_dir, "fst_genome_multipair_smooth.jpg")
+  save_path = file.path(out_dir, "fst_genome_multipair_smooth.jpg")
 )
 # --------------------------
 
