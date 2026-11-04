@@ -7,6 +7,8 @@ library(ggplot2)
 library(ggtext)
 library(patchwork)
 library(viridisLite)
+library(here)
+source(here("scripts", "functions.R"))
 # --------------------------
 
 # --------------------------
@@ -79,39 +81,6 @@ load_fst <- function(path) {
 # --------------------------
 
 # --------------------------
-# Define normalize_and_calculate_pi_ratio()
-# Input: Diversity values from load_diversity(), timepoint to use as baseline
-# Output: Pi ratio (compared to baseline timepoint) for each subsequent timepoint
-
-normalize_and_calculate_pi_ratio <- function(data, baseline = "F0") {
-  
-  normalized_data <- data %>%
-    group_by(sample) %>%
-    mutate(pi_norm = theta_pi / median(theta_pi, na.rm = TRUE)) %>%
-    ungroup()
-  
-  baseline_data <- normalized_data %>%
-    dplyr::filter(sample == baseline) %>%
-    dplyr::select(chrom, start, end, pi_norm_baseline = pi_norm)
-  
-  other_data <- normalized_data %>%
-    dplyr::filter(sample != baseline) %>%
-    dplyr::select(chrom, start, end, sample, pi_norm_sample = pi_norm)
-  
-  ratio_data <- other_data %>%
-    inner_join(baseline_data, by = c("chrom", "start", "end")) %>%
-    mutate(
-      pi_ratio = pi_norm_sample / pi_norm_baseline,
-      pi_ratio_log10 = log10(pi_ratio)
-    ) %>%
-    group_by(sample) %>%
-    mutate(pi_rank = rank(pi_ratio, na.last = "keep")) %>%
-    ungroup() %>%
-    dplyr::select(chrom, start, end, sample, pi_norm_baseline, pi_norm_sample,
-                  pi_ratio, pi_ratio_log10, pi_rank)
-  
-  ratio_data
-}
 # --------------------------
 
 # --------------------------
