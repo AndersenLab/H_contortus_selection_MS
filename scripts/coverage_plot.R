@@ -36,4 +36,5 @@ p_vertical <- ggplot(coverage, aes(x = sample_name, y = coverage)) +
   theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1, vjust = 1),
         plot.margin = margin(5, 10, 5, 25))
 
-ggsave(here("figures", "coverage_vertical.png"), p_vertical, width = 7.5, height = 3.75, dpi = 300)
+ggsave(here("figures", "figure1s_coverage.jpg"), p_vertical,
+       width = 7.5, height = 3.75, dpi = 300, quality = 95)
