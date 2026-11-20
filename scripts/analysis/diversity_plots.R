@@ -1,195 +1,24 @@
-# --------------------------
-# --------------------------
-# 1. Setup 
-# --------------------------
-# --------------------------
-
-library(dplyr)
-library(readr)
-library(tidyr)
-library(stringr)
-library(ggplot2)
-
+klibrary(tidyverse)
+library(ggtext)
 library(here)
 source(here("scripts", "analysis", "functions.R"))
 
-# --------------------------
-# --------------------------
-# 2. Data processing functions 
-# --------------------------
-# --------------------------
+# -----------------------------------------------------------------------------
+# Constants
+# -----------------------------------------------------------------------------
 
-# --------------------------
-# Define relabel_sample()
-# Converts grenedalf naming structure to Pre_X or Post_X for plotting
+baseline <- "Treatment02_Pre"
 
-relabel_sample <- function(x) {
-  timepoint <- ifelse(grepl("_Pre$", x), "Pre", "Post")
-  number <- as.integer(str_extract(x, "(?<=Treatment)[0-9]+"))
-  paste0(timepoint, "_", number)
-}
-# --------------------------
-# --------------------------
+plot_samples <- c("Treatment03_Pre", "Treatment04_Pre",
+                  "Treatment08_Pre", "Treatment08_Post",
+                  "Treatment09_Pre", "Treatment09_Post",
+                  "Treatment10_Pre", "Treatment10_Post",
+                  "Treatment11_Pre")
 
-# --------------------------
-# Define identify_pi_outliers()
-# Input: data (output of calculate_pi_ratio()), percentile cutoff for "low diversity"
-# Output: same data, with an outlier flag column added, using one threshold shared across all samples
+# -----------------------------------------------------------------------------
+# Plotting function (unchanged from diversity_plots.R)
+# -----------------------------------------------------------------------------
 
-identify_pi_outliers <- function(data, percentile = 0.01) {
-  threshold <- quantile(data$pi_ratio_log10, probs = percentile, na.rm = TRUE)
-  
-  data %>%
-    mutate(
-      threshold = threshold,
-      is_outlier = pi_ratio_log10 <= threshold
-    )
-}
-# --------------------------
-
-# --------------------------
-# Define find_contiguous_regions()
-# Input: data (output of identify_pi_outliers()), minimum consecutive outlier windows to call a region
-# Output: one row per candidate region, per sample/chromosome, with its span and window count
-
-find_contiguous_regions <- function(data, min_windows = 3) {
-  
-  data %>%
-    arrange(sample, chrom, start) %>%
-    group_by(sample, chrom) %>%
-    mutate(
-      run_id = cumsum(is_outlier != lag(is_outlier, default = first(is_outlier)))
-    ) %>%
-    dplyr::filter(is_outlier) %>%
-    group_by(sample, chrom, run_id) %>%
-    summarize(
-      region_start = min(start),
-      region_end = max(end),
-      n_windows = n(),
-      mean_pi_ratio_log10 = mean(pi_ratio_log10, na.rm = TRUE),
-      min_pi_ratio_log10 = min(pi_ratio_log10, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    dplyr::filter(n_windows >= min_windows) %>%
-    dplyr::select(-run_id) %>%
-    arrange(sample, chrom, region_start)
-}
-# --------------------------
-
-# --------------------------
-# Define flag_region_windows()
-# Input: data (output of identify_pi_outliers()), candidate regions (output of find_contiguous_regions())
-# Output: same data, with a new column marking whether each window falls inside a validated candidate region
-
-flag_region_windows <- function(data, regions) {
-  data %>%
-    left_join(
-      regions %>% dplyr::select(sample, chrom, region_start, region_end),
-      by = c("sample", "chrom"),
-      relationship = "many-to-many"
-    ) %>%
-    group_by(sample, chrom, start, end) %>%
-    mutate(in_region = any(start >= region_start & end <= region_end, na.rm = TRUE)) %>%
-    ungroup() %>%
-    distinct(sample, chrom, start, end, .keep_all = TRUE) %>%
-    mutate(in_region = tidyr::replace_na(in_region, FALSE))
-}
-# --------------------------
-
-# --------------------------
-# --------------------------
-# 3. Plotting functions 
-# --------------------------
-# --------------------------
-
-# --------------------------
-# Define plot_diversity()
-# Input: grenedalf dataframe with all three metrics, which metric you want to plot, and which timepoints you want to plot
-# Output: Genome-wide plot, faceted by sample, and colored by chromosome
-
-plot_diversity <- function(data,
-                           samples,
-                           metric = "theta_pi",
-                           chrom_order = c(
-                             "hcontortus_chr1_Celeg_TT_arrow_pilon",
-                             "hcontortus_chr2_Celeg_TT_arrow_pilon",
-                             "hcontortus_chr3_Celeg_TT_arrow_pilon",
-                             "hcontortus_chr4_Celeg_TT_arrow_pilon",
-                             "hcontortus_chr5_Celeg_TT_arrow_pilon",
-                             "hcontortus_chrX_Celeg_TT_arrow_pilon"
-                           ),
-                           short_labels = c("I", "II", "III", "IV", "V", "X"),
-                           show_label = FALSE,
-                           smooth = FALSE,
-                           loess_span = 0.1,
-                           save_path = NULL,
-                           width = 10,
-                           height = 3,
-                           dpi = 300) {
-  
-  plot_data <- data %>%
-    dplyr::filter(sample %in% samples, chrom %in% chrom_order, !is.na(.data[[metric]])) %>%
-    mutate(chrom = factor(chrom, levels = chrom_order))
-  
-  # Build cumulative genome-wide offset for each chromosome, so positions
-  # concatenate end-to-end rather than each starting back at zero
-  chrom_lengths <- plot_data %>%
-    group_by(chrom) %>%
-    summarize(max_end = max(end), .groups = "drop") %>%
-    arrange(match(chrom, chrom_order)) %>%
-    mutate(offset = lag(cumsum(as.numeric(max_end)), default = 0))
-  
-  plot_data <- plot_data %>%
-    left_join(chrom_lengths %>% dplyr::select(chrom, offset), by = "chrom") %>%
-    mutate(
-      position_mb = (((start + end) / 2) + offset) / 1e6,
-      chrom_short = factor(short_labels[match(chrom, chrom_order)], levels = short_labels)
-    )
-  
-  # Chromosome midpoints, for x-axis tick labels
-  axis_labels <- plot_data %>%
-    group_by(chrom_short) %>%
-    summarize(mid = mean(range(position_mb)), .groups = "drop")
-  
-  p <- ggplot(plot_data, aes(x = position_mb, y = .data[[metric]], color = chrom_short)) +
-    geom_point(alpha = 0.5, size = 0.6) +
-    scale_color_viridis_d() +
-    scale_x_continuous(breaks = axis_labels$mid, labels = axis_labels$chrom_short) +
-    labs(x = "Chromosome", y = expression(Nucleotide~diversity~(pi)), color = "Chromosome") +
-    guides(color = "none") +
-    theme_bw() +
-    theme(panel.grid.minor = element_blank())
-  
-  # Add facet with or without labels
-  if (show_label) {
-    p <- p + facet_wrap(~sample, ncol = 1, labeller = as_labeller(relabel_sample))
-  } else {
-    p <- p + 
-      facet_wrap(~sample, ncol = 1) +
-      theme(
-        strip.background = element_blank(),
-        strip.text = element_blank()
-      )
-  }
-  
-  if (smooth) {
-    p <- p + geom_smooth(aes(group = chrom_short), method = "loess", span = loess_span,
-                         se = FALSE, color = "black", linewidth = 0.5)
-  }
-  
-  if (!is.null(save_path)) {
-    ggsave(save_path, plot = p, width = width, height = height * length(samples), dpi = dpi)
-  }
-  
-  p
-}
-
-# --------------------------
-
-# --------------------------
-# Define plot_pi_ratio()
-# Input: data (output of calculate_pi_ratio()), one or more samples to plot
-# Output: Genome-wide plot of log10(pi ratio) to baseline, faceted by chromosome and sample
 plot_pi_ratio <- function(data,
                           samples,
                           compact = FALSE,
@@ -206,14 +35,14 @@ plot_pi_ratio <- function(data,
                           width = 7.5,
                           height_per_sample = 2,
                           dpi = 300) {
-  
+
   # Set chromosome labels based on roman_numerals
   if (roman_numerals) {
     short_labels <- c("I", "II", "III", "IV", "V", "X")
   } else {
     short_labels <- c("1", "2", "3", "4", "5", "X")
   }
-  
+
   plot_data <- data %>%
     dplyr::filter(sample %in% samples, chrom %in% chrom_order, !is.na(pi_ratio_log10)) %>%
     mutate(
@@ -221,7 +50,7 @@ plot_pi_ratio <- function(data,
       chrom_short = factor(short_labels[match(chrom, chrom_order)], levels = short_labels),
       position_mb = ((start + end) / 2) / 1e6
     )
-  
+
   # Relabel samples to human-readable names
   if (compact) {
     plot_data <- plot_data %>%
@@ -232,7 +61,7 @@ plot_pi_ratio <- function(data,
       mutate(sample_label = gsub("Treatment0?(\\d+)_(Pre|Post)", "\\2-treatment \\1", sample),
              sample_label = factor(sample_label, levels = unique(sample_label)))
   }
-  
+
   # Standard theme
   my_theme <- theme_bw(base_size = 12) +
     theme(
@@ -246,14 +75,16 @@ plot_pi_ratio <- function(data,
       strip.background = element_blank(),
       panel.spacing.x = unit(0.1, "lines")
     )
-  
+
   # Set x-axis breaks
   if (compact) {
-    x_scale <- scale_x_continuous(breaks = function(x) setdiff(pretty(x), 0), expand = expansion(mult = c(0.02, 0.02)))
+    x_scale <- scale_x_continuous(breaks = function(x) setdiff(pretty(x), 0),
+                                  expand = expansion(mult = c(0.02, 0.02)))
   } else {
-    x_scale <- scale_x_continuous(breaks = c(15, 30, 45), expand = expansion(mult = c(0.02, 0.02)))
+    x_scale <- scale_x_continuous(breaks = c(15, 30, 45),
+                                  expand = expansion(mult = c(0.02, 0.02)))
   }
-  
+
   p <- ggplot(plot_data, aes(x = position_mb, y = pi_ratio_log10)) +
     geom_point(alpha = 0.3, size = 0.6, color = "black") +
     geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
@@ -261,264 +92,50 @@ plot_pi_ratio <- function(data,
     labs(x = "Position (Mb)", y = "**log<sub>10</sub> (π ratio)**") +
     my_theme +
     theme(axis.title.y = ggtext::element_markdown(size = 12))
-  
+
   # Facet by chromosome (columns) and sample (rows)
   if (length(samples) == 1) {
-    p <- p + 
+    p <- p +
       facet_wrap(~chrom_short, nrow = 1, scales = "free_x")
   } else {
-    p <- p + 
+    p <- p +
       facet_grid(sample_label ~ chrom_short, scales = "free_x", switch = "y") +
       theme(
         strip.placement = "outside",
         strip.text.y.left = element_text(angle = 0, size = 12)
       )
   }
-  
+
   if (!is.null(save_path)) {
     total_height <- height_per_sample * length(samples)
     ggsave(save_path, plot = p, width = width, height = total_height, dpi = dpi)
   }
-  
+
   p
 }
 
-# --------------------------
-# Define plot_pi_ratio_by_value()
-# Input: data (output of calculate_pi_ratio()), one or more samples to plot
-# Output: Genome-wide plot colored by pi ratio value instead of chromosome
+# -----------------------------------------------------------------------------
+# Data
+# -----------------------------------------------------------------------------
 
-plot_pi_ratio_by_value <- function(data,
-                                   samples,
-                                   chrom_order,
-                                   save_path = NULL,
-                                   width = 10,
-                                   height = 3,
-                                   dpi = 300) {
-  
-  plot_data <- data %>%
-    dplyr::filter(sample %in% samples, chrom %in% chrom_order, !is.na(pi_ratio_log10)) %>%
-    mutate(position_mb = (start + end) / 2 / 1e6)
-  
-  p <- ggplot(plot_data, aes(x = position_mb, y = pi_ratio_log10, color = pi_ratio_log10)) +
-    geom_point(alpha = 0.5, size = 0.6) +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
-    scale_color_viridis_c() +
-    facet_wrap(~sample, ncol = 1, strip.position = "left", labeller = as_labeller(relabel_sample)) +
-    labs(x = "Position (Mb)", y = expression(log[10]~"("~pi~"ratio)"), color = expression(log[10]~"ratio")) +
-    theme_bw() +
-    theme(
-      panel.grid.minor = element_blank(),
-      strip.background = element_blank(),
-      strip.placement = "outside",
-      strip.text.y.left = element_text(angle = 0)
-    )
-  
-  if (!is.null(save_path)) {
-    ggsave(save_path, plot = p, width = width, height = height * length(samples), dpi = dpi)
-  }
-  
-  p
-}
-# --------------------------
+diversity_values <- load_diversity(here("data", "diversity", "100kb", "diversity.csv"))$values
 
-# --------------------------
-# Define plot_pi_outliers()
-# Input: data (output of flag_region_windows()), one or more samples to plot
-# Output: Genome-wide Manhattan-style plot of log10(pi ratio) to baseline, faceted by sample, colored by validated region membership
+pi_ratios <- normalize_and_calculate_pi_ratio(diversity_values, baseline = baseline)
 
-plot_pi_outliers <- function(data,
-                             samples,
-                             chrom_order = c(
-                               "hcontortus_chr1_Celeg_TT_arrow_pilon",
-                               "hcontortus_chr2_Celeg_TT_arrow_pilon",
-                               "hcontortus_chr3_Celeg_TT_arrow_pilon",
-                               "hcontortus_chr4_Celeg_TT_arrow_pilon",
-                               "hcontortus_chr5_Celeg_TT_arrow_pilon",
-                               "hcontortus_chrX_Celeg_TT_arrow_pilon"
-                             ),
-                             short_labels = c("I", "II", "III", "IV", "V", "X"),
-                             save_path = NULL,
-                             width = 10,
-                             height = 3,
-                             dpi = 300) {
-  
-  plot_data <- data %>%
-    dplyr::filter(sample %in% samples, chrom %in% chrom_order, !is.na(pi_ratio_log10)) %>%
-    mutate(chrom = factor(chrom, levels = chrom_order))
-  
-  chrom_lengths <- plot_data %>%
-    group_by(chrom) %>%
-    summarize(max_end = max(end), .groups = "drop") %>%
-    arrange(match(chrom, chrom_order)) %>%
-    mutate(offset = lag(cumsum(as.numeric(max_end)), default = 0))
-  
-  plot_data <- plot_data %>%
-    left_join(chrom_lengths %>% dplyr::select(chrom, offset), by = "chrom") %>%
-    mutate(
-      position_mb = (((start + end) / 2) + offset) / 1e6,
-      chrom_short = factor(short_labels[match(chrom, chrom_order)], levels = short_labels)
-    )
-  
-  axis_labels <- plot_data %>%
-    group_by(chrom_short) %>%
-    summarize(mid = mean(range(position_mb)), .groups = "drop")
-  
-  # Plot background windows first, validated-region windows last (drawn on top)
-  p <- ggplot(plot_data %>% arrange(in_region),
-              aes(x = position_mb, y = pi_ratio_log10, color = in_region)) +
-    geom_point(alpha = 0.5, size = 0.6) +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
-    scale_color_manual(values = c("FALSE" = "gray70", "TRUE" = "firebrick"),
-                       labels = c("FALSE" = "Background", "TRUE" = "Candidate region")) +
-    scale_x_continuous(breaks = axis_labels$mid, labels = axis_labels$chrom_short) +
-    facet_wrap(~sample, ncol = 1, strip.position = "left", labeller = as_labeller(relabel_sample)) +
-    labs(x = "Chromosome", y = expression(log[10]~"("~pi~"ratio)"), color = NULL) +
-    theme_bw() +
-    theme(
-      panel.grid.minor = element_blank(),
-      strip.background = element_blank(),
-      strip.placement = "outside",
-      strip.text.y.left = element_text(angle = 0)
-    )
-  
-  if (!is.null(save_path)) {
-    ggsave(save_path, plot = p, width = width, height = height * length(samples), dpi = dpi)
-  }
-  
-  p
-}
-# --------------------------
+# -----------------------------------------------------------------------------
+# Figure 2S
+# -----------------------------------------------------------------------------
 
-# --------------------------
-# --------------------------
-# 4. Analysis pipeline 
-# --------------------------
-# --------------------------
-
-# --------------------------
-# Load data
-diversity_data <- load_diversity(here("data", "diversity", "100kb", "diversity.csv"))
-
-# View dataframes
-diversity_data$windows
-diversity_data$qc
-diversity_data$values
-
-# Save values to an object
-diversity_values <- diversity_data$values
-
-# Check available samples
-unique(diversity_values$sample)
-# --------------------------
-
-# --------------------------
-# Calculate pi ratios
-pi_ratios <- normalize_and_calculate_pi_ratio(diversity_values, baseline = "Treatment02_Pre")
-dir.create(here("results"), showWarnings = FALSE)
-write_csv(pi_ratios, here("results", "pi_ratios_per_window.csv"))
-
-head(pi_ratios)
-
-# Get all sample names for plotting
-all_samples <- unique(pi_ratios$sample)
-# --------------------------
-
-# --------------------------
-# Identify outliers and candidate regions
-pi_outliers <- identify_pi_outliers(pi_ratios, percentile = 0.001)
-
-candidate_regions <- find_contiguous_regions(pi_outliers, min_windows = 3)
-write_csv(candidate_regions, here("results", "candidate_regions.csv"))
-candidate_regions
-
-pi_flagged <- flag_region_windows(pi_outliers, candidate_regions)
-# --------------------------
-
-# --------------------------
-# --------------------------
-# 5. Generate plots 
-# --------------------------
-# --------------------------
-
-# Define output directory
-out_dir <- here("figures")
-
-# --------------------------
-# Plot raw diversity
-p_div <- plot_diversity(
-  diversity_values,
-  samples = "Treatment11_Pre",
-  metric = "theta_pi"
-)
-ggsave(file.path(out_dir, "diversity_Treatment11_Pre.jpg"), plot = p_div, width = 3.75, height = 2.5, dpi = 300)
-# --------------------------
-
-# --------------------------
-# Plot pi ratio for final sample
-p_pi_t11 <- plot_pi_ratio(
-  pi_ratios,
-  samples = "Treatment11_Pre"
-)
-ggsave(file.path(out_dir, "pi_ratio_Treatment11_Pre.jpg"), plot = p_pi_t11, width = 3.75, height = 2.5, dpi = 300)
-# --------------------------
-
-# --------------------------
-# Plot pi ratio for all samples
-plot_samples <- c("Treatment03_Pre", "Treatment04_Pre", "Treatment08_Pre",
-                  "Treatment08_Post", "Treatment09_Pre", "Treatment09_Post",
-                  "Treatment10_Pre", "Treatment10_Post", "Treatment11_Pre")
-
-# Full labels, roman numerals (default)
-p_roman <- plot_pi_ratio(
-  pi_ratios,
-  samples = plot_samples
-)
-ggsave(file.path(out_dir, "pi_ratio_roman.jpg"), plot = p_roman, width = 7.5, height = 9, dpi = 300)
-
-
-# Compact labels, roman numerals
-p_compact_roman <- plot_pi_ratio(
-  pi_ratios,
-  samples = plot_samples,
-  compact = TRUE
-)
-ggsave(file.path(out_dir, "pi_ratio_compact_roman.jpg"), plot = p_compact_roman, width = 7.5, height = 9, dpi = 300)
-
-# Full labels, arabic numerals
-p_arabic <- plot_pi_ratio(
+p_fig2s <- plot_pi_ratio(
   pi_ratios,
   samples = plot_samples,
   roman_numerals = FALSE
 )
-ggsave(file.path(out_dir, "pi_ratio_arabic.jpg"), plot = p_arabic, width = 7.5, height = 9, dpi = 300)
 
-
-# Compact labels, arabic numerals
-p_compact_arabic <- plot_pi_ratio(
-  pi_ratios,
-  samples = plot_samples,
-  compact = TRUE,
-  roman_numerals = FALSE
+ggsave(
+  here("figures", "figure2s_pi_ratio.jpg"),
+  plot = p_fig2s,
+  width = 7.5,
+  height = 9,
+  dpi = 300
 )
-ggsave(file.path(out_dir, "pi_ratio_compact_arabic.jpg"), plot = p_compact_arabic, width = 7.5, height = 9, dpi = 300)
-# --------------------------
-
-# --------------------------
-# Plot pi ratio colored by value (single chromosome)
-p_by_value <- plot_pi_ratio_by_value(
-  pi_ratios,
-  samples = all_samples,
-  chrom_order = "hcontortus_chr1_Celeg_TT_arrow_pilon"
-)
-ggsave(file.path(out_dir, "pi_ratio_by_value_chr1.jpg"), plot = p_by_value, width = 3.75, height = 8, dpi = 300)
-# --------------------------
-
-# --------------------------
-# Plot outliers
-p_outliers <- plot_pi_outliers(
-  pi_flagged,
-  samples = all_samples
-)
-ggsave(file.path(out_dir, "pi_outliers_all_samples.jpg"), plot = p_outliers, width = 7.5, height = 9, dpi = 300)
-
