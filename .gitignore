@@ -32,3 +32,4 @@ scripts/selection_blocks.R
 scripts/fst_small_windows.R
 scripts/plots_red.R
 scripts/region_definition.R
+scripts/fst_plots.R
