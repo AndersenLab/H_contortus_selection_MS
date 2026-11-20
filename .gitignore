@@ -27,3 +27,5 @@ scripts/*.png
 scripts/*.jpg
 *.sync
 *.sync.gz
+scripts/selection_blocks.R
+!data/iso-1/tbb_iso1_resistance_sites.sync
