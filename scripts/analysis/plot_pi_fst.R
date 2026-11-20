@@ -6,7 +6,7 @@ library(ggplot2)
 library(ggtext)
 library(patchwork)
 library(here)
-source(here("scripts", "functions.R"))
+source(here("scripts", "analysis", "functions.R"))
 # --------------------------
 
 # --------------------------

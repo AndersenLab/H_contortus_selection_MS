@@ -11,7 +11,7 @@ library(stringr)
 library(ggplot2)
 
 library(here)
-source(here("scripts", "functions.R"))
+source(here("scripts", "analysis", "functions.R"))
 
 # --------------------------
 # --------------------------
