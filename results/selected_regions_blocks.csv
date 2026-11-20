@@ -1,0 +1,8 @@
+sample,pair,chrom,start_mb,end_mb,span_windows,n_above
+Treatment08_Post,Treatment02_Pre:Treatment08_Post,hcontortus_chr1_Celeg_TT_arrow_pilon,6.5500005,8.2500005,18,11
+Treatment08_Pre,Treatment02_Pre:Treatment08_Pre,hcontortus_chr1_Celeg_TT_arrow_pilon,6.5500005,8.2500005,18,11
+Treatment09_Post,Treatment02_Pre:Treatment09_Post,hcontortus_chr1_Celeg_TT_arrow_pilon,6.4500005,8.2500005,19,16
+Treatment09_Pre,Treatment02_Pre:Treatment09_Pre,hcontortus_chr1_Celeg_TT_arrow_pilon,6.5500005,8.1500005,17,7
+Treatment10_Post,Treatment02_Pre:Treatment10_Post,hcontortus_chr1_Celeg_TT_arrow_pilon,6.4500005,8.8500005,25,22
+Treatment10_Pre,Treatment02_Pre:Treatment10_Pre,hcontortus_chr1_Celeg_TT_arrow_pilon,6.5500005,8.2500005,18,15
+Treatment11_Pre,Treatment02_Pre:Treatment11_Pre,hcontortus_chr1_Celeg_TT_arrow_pilon,6.3500005,8.8500005,26,23
