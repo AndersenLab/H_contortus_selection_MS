@@ -4,6 +4,7 @@ library(cowplot)
 library(here)
 
 coverage <- read.delim(here("data", "metadata", "coverage_summary.tsv"))
+
 # Make names human readable
 coverage$sample_name <- gsub("Treatment0?(\\d+)_(Pre|Post)", "\\2-\\1", coverage$sample_name)
 
