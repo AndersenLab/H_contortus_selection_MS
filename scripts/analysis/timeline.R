@@ -144,63 +144,43 @@ make_timeline_plot <- function(color_collections_by_dose = FALSE) {
 }
 
 # =============================================================================
-# CREATE AND SAVE STANDALONE TIMELINE PLOTS
-# =============================================================================
-
-p_timeline_grey <- make_timeline_plot(color_collections_by_dose = FALSE)
-ggsave(
-  filename = here("figures", "timeline_collections_grey.png"),
-  plot = p_timeline_grey,
-  width = 7.5,
-  height = 3.3,
-  dpi = 300
-)
-
-p_timeline_colored <- make_timeline_plot(color_collections_by_dose = TRUE)
-ggsave(
-  filename = here("figures", "timeline_collections_colored.png"),
-  plot = p_timeline_colored,
-  width = 7.5,
-  height = 3.3,
-  dpi = 300
-)
-
-# =============================================================================
-# PADDOCK MAP PLOT
+# PADDOCK MAP PLOT (panel A)
 # =============================================================================
 img_height <- dim(img)[1]
 img_width <- dim(img)[2]
 
 p_paddock <- ggplot() +
   annotation_raster(img, xmin = 0, xmax = 1, ymin = 0, ymax = 1) +
-  annotate("text", x = 0.85, y = 0.75, 
-           label = "Treated (6400 m²)", 
-           size = font_size/.pt, color = "black", hjust = 1) +
-  annotate("text", x = 0.85, y = 0.30, 
-           label = "Control (2000 m²)", 
-           size = font_size/.pt, color = "black", hjust = 1) +
+  annotate("text", x = 0.85, y = 0.75,
+           label = "Treated (6400 m²)",
+           size = font_size / .pt, color = "black", hjust = 1) +
+  annotate("text", x = 0.85, y = 0.30,
+           label = "Control (2000 m²)",
+           size = font_size / .pt, color = "black", hjust = 1) +
   xlim(0, 1) +
   ylim(0, 1) +
-  coord_fixed(ratio = img_height/img_width, clip = "off") +
+  coord_fixed(ratio = img_height / img_width, clip = "off") +
   theme_void() +
   theme(plot.margin = margin(t = 5, r = 10, b = 10, l = 10))
 
 # =============================================================================
-# COMBINED FIGURE
+# COMBINED FIGURE 1 (panel A: paddock map, panel B: timeline)
 # =============================================================================
+
+p_timeline_grey <- make_timeline_plot(color_collections_by_dose = FALSE)
 
 p_timeline_grey_tight <- p_timeline_grey +
   theme(plot.margin = margin(t = 20, r = 50, b = 5, l = 80))
 
 combined_plot_vertical <- p_paddock / p_timeline_grey_tight +
   plot_annotation(
-    tag_levels = 'A',
+    tag_levels = "A",
     theme = theme(plot.tag = element_text(size = font_size, face = "bold"))
   ) +
   plot_layout(heights = c(1.4, 0.8))
 
 ggsave(
-  filename = here("figures", "figure1_combined.png"),
+  filename = here("figures", "figure1_combined.jpg"),
   plot = combined_plot_vertical,
   width = 7.5,
   height = 7,
