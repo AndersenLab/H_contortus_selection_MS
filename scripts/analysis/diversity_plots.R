@@ -1,4 +1,4 @@
-klibrary(tidyverse)
+library(tidyverse)
 library(ggtext)
 library(here)
 source(here("scripts", "analysis", "functions.R"))
