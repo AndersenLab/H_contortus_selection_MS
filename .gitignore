@@ -29,3 +29,6 @@ scripts/*.jpg
 *.sync.gz
 scripts/selection_blocks.R
 !data/iso-1/tbb_iso1_resistance_sites.sync
+scripts/fst_small_windows.R
+scripts/plots_red.R
+scripts/region_definition.R
