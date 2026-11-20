@@ -1,6 +1,7 @@
 library(tidyverse)
 library(ggtext)
 library(patchwork)
+library(here)
 
 # ---- Shared constants -------------------------------------------------
 
@@ -23,8 +24,10 @@ sample_names <- c(
   "Treatment11_Pre", "Treatment11_Post"
 )
 
+sync_file <- here("data", "iso-1", "tbb_iso1_resistance_sites.sync")
+
 sync_line <- read.table(
-  "/vast/eande106/projects/Etta/H_contortus_selection/iso-2/tbb_iso1_resistance_sites.sync",
+  sync_file,
   header = FALSE, sep = "\t", stringsAsFactors = FALSE
 ) %>%
   filter(V2 == 7029790)
@@ -222,26 +225,12 @@ combined_plot
 
 # ---- Save -------------------------------------------------------------
 
+dir.create(here("figures"), showWarnings = FALSE)
+
 ggsave(
-  "~/Etta/H_contortus_selection/figures/F200Y_combined.png",
+  here("figures", "figure4_F200Y_combined.jpg"),
   combined_plot,
   width = 7.5,
   height = 8,
-  dpi = 300
-)
-
-ggsave(
-  "~/Etta/H_contortus_selection/figures/F200Y_barplot.png",
-  plot_bar,
-  width = 7.5,
-  height = 4.5,
-  dpi = 300
-)
-
-ggsave(
-  "~/Etta/H_contortus_selection/figures/F200Y_scatter.png",
-  plot_scatter,
-  width = 7.5,
-  height = 4,
   dpi = 300
 )
