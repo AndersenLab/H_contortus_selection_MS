@@ -7,6 +7,7 @@
 
 set -euo pipefail
 
+# Usage: sbatch merge_bam.sh <BAM_LIST> <OUT_DIR>
 
 module load samtools/1.15.1
 

@@ -5,6 +5,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=mpileup2sync_%j.log
 
+# Usage: sbatch mpileup2sync.sh <INPUT_PILEUP> <OUTPUT_SYNC> [MIN_QUAL]
+
 set -euo pipefail
 
 INPUT_PILEUP=$1

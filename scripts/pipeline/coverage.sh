@@ -6,6 +6,8 @@
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=4
 
+set -euo pipefail
+
 # Runs mosdepth on one BAM per array task.
 #
 # Usage: MOSDEPTH_BIN=/path/to/mosdepth sbatch --array=0-N coverage.sh <BAM_DIR> <OUT_DIR>

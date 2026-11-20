@@ -5,6 +5,8 @@
 #
 # Usage: bash combine_coverage.sh <MOSDEPTH_DIR> <OUT_DIR> <SUMMARY_FILE>
 
+set -euo pipefail
+
 if [ $# -ne 3 ]; then
     echo "Usage: bash combine_coverage.sh <MOSDEPTH_DIR> <OUT_DIR> <SUMMARY_FILE>"
     echo "  MOSDEPTH_DIR: Directory containing .mosdepth.summary.txt files"

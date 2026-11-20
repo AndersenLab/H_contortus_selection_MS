@@ -5,6 +5,8 @@
 #SBATCH --time=12:00:00
 #SBATCH --output=merge_pileup.log
 
+# Usage: sbatch merge_pileup.sh <CONTIG_LIST> <PILEUP_DIR> [OUT_FILE]
+
 set -euo pipefail
 
 CONTIG_LIST=${1:?"Error: Please provide contig list as first argument"}

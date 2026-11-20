@@ -5,6 +5,8 @@
 #SBATCH --time=6:00:00
 #SBATCH --output=split_sync_%j.log
 
+# Usage: sbatch split_sync.sh <INPUT_SYNC> <OUTPUT_DIR>
+
 set -euo pipefail
 
 INPUT_SYNC=${1:?"Error: Please provide input sync file as first argument"}
