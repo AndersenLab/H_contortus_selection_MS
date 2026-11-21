@@ -9,4 +9,6 @@ XXX
 
 ### data/
 * FASTQs are available at the NCBI under PRJNA1559015
-* BAMs and BAM indices are available on AWS Open Data, under the file pattern https://caendr-open-access-data-bucket.s3.us-east-2.amazonaws.com/H_contortus_selection_MS/h_contortus_sample_<sample>.bam and https://caendr-open-access-data-bucket.s3.us-east-2.amazonaws.com/H_contortus_selection_MS/h_contortus_sample_<sample>.bam.bai. Metadata is deposited at https://caendr-open-access-data-bucket.s3.us-east-2.amazonaws.com/H_contortus_selection_MS/README.md
+* BAMs and BAM indices are available on AWS Open Data, at the path https://caendr-open-access-data-bucket.s3.us-east-2.amazonaws.com/H_contortus_selection_MS/
+** Per-sample BAMs and indices are named with the pattern h_contortus_<sample>_.bam and h_contortus_<sample>_.bam.bai, for example: h_contortus_sample_41
+** Key to map sample IDs to treatment timepoints is stored in the README.md
