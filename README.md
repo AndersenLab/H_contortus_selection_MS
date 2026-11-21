@@ -5,10 +5,24 @@ The role of variation in the isotype-1 beta-tubulin gene in benzimidazole (BZ) r
 ## Manuscript:
 XXX
 
-## Respository contents:
-
-### data/
+## Data available elsewhere:
 * FASTQs are available at the NCBI under PRJNA1559015
 * BAMs and BAM indices are available on AWS Open Data, at the path https://caendr-open-access-data-bucket.s3.us-east-2.amazonaws.com/H_contortus_selection_MS/
   * Per-sample BAMs and indices are named with the pattern h_contortus_<sample>_.bam and h_contortus_<sample>_.bam.bai, for example: h_contortus_sample_41
   * Key to map sample IDs to treatment timepoints is stored in the README.md
+
+## Respository contents:
+
+### data/
+* coverage/: Per-timepoint coverage calculated by mosdepth, split by chromosome
+* diversity/: Pi, theta, and Tajima's D output from grenedalf diversity
+  * /100kb: Calculated in 100 kb bins across the genome
+  * /10kb: Calculated in 10 kb bins across chromosome 1
+* downsample/: List of samples above 10X downsampling coverage with original coverage values
+* fst/: FST output from grenedalf diversity
+  * /100kb: Calculated in 100 kb bins across the genome
+  * /10kb: Calculated in 10 kb bins across chromosome 1
+* iso-1/: Genotypes for canonical isotype-1 beta tubulin resistance codons (167, 198, and 200)
+* metadata/: 
+  * coverage_summary.tsv: Genome-wide mean coverage for all samples
+  * timeline_clean.csv: Metadata (dates and doses) for each treatment  
